@@ -44,9 +44,29 @@ def generate_challenges(count: int) -> list[Challenge]:
         ) for j in range(1, count + 1)
     ]
 
+def select_adaptive_challenges(player: Player, challenges: list[Challenge], quantity: int) -> list[Challenge]:
+    """
+    Finds challenges whose visible rating is closest to the student's visible rating.
+    This mimics a real tutor recommending appropriate difficulty levels.
+    """
+    # Sort all challenges based on how close their rating is to the player's current rating
+    sorted_candidates = sorted(
+        challenges, 
+        key=lambda ch: abs(ch.rating - player.rating)
+    )
+    
+    # Take a pool of the best matches, then sample from them to avoid repetition
+    # and provide some variety.
+    pool_size = quantity * 2
+    best_candidates = sorted_candidates[:pool_size]
+    
+    # Ensure we don't try to sample more than available in the pool
+    actual_sample_size = min(len(best_candidates), quantity)
+    return random.sample(best_candidates, actual_sample_size)
+
 if __name__ == "__main__":
     # 1. Instantiate the Engine
-    engine = EloEngine(k_constant=32)
+    engine = EloEngine()
 
     # 2. Scaling up: Generate large batches of players and challenges
     player_count = 1000
@@ -57,13 +77,13 @@ if __name__ == "__main__":
 
     print(f"Arena initialized with {len(players)} players and {len(challenges)} challenges.")
 
-    # 3. Optimized Simulation Loop
-    iterations_per_player = 300
-    print(f"Starting batch processing ({len(players) * iterations_per_player} total interactions)...")
+    # 3. Adaptive Simulation Loop
+    iterations_per_player = 150 # Lowered because adaptive matching is more efficient
+    print(f"Starting adaptive processing ({len(players) * iterations_per_player} total interactions)...")
 
     for player in players:
-        # Each player attempts a unique random sample of challenges
-        selected_challenges = random.sample(challenges, iterations_per_player)
+        # Use adaptive matchmaking instead of random selection
+        selected_challenges = select_adaptive_challenges(player, challenges, iterations_per_player)
         
         for challenge in selected_challenges:
             # Simulate the outcome based on real skills
@@ -75,7 +95,7 @@ if __name__ == "__main__":
             # Record the new rating for history
             player.record_rating()
 
-    print("Large-scale simulation completed!")
+    print("Adaptive simulation completed!")
 
     # 4. Optional: Print a few results to verify
     print("\n--- Sample Results ---")
