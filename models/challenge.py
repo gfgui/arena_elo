@@ -9,6 +9,7 @@ class Challenge:
         self.total_attempts = 0
         self.success_count = 0  # Number of students who solved it
         self.failure_count = 0  # Number of students who failed it
+        self.sum_player_ratings = 0.0  # Sum of player ratings who attempted
 
     @property
     def success_rate(self) -> float:
